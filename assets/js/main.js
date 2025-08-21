@@ -1,23 +1,34 @@
 // Глобальные переменные
 let allData = [];
 
-// Ключевые слова для поиска нужных колонок
-const defaultCols = {
-  lastName: ['фамилия', 'surname', 'last'],
-  firstName: ['имя', 'name', 'first'],
-  city: ['место жительства', 'адрес', 'проживание', 'город'],
-  birth: ['дата рождения', 'возраст', 'birthday'],
-  docs: ['паспорт', 'документ', 'загруз', 'копия'],
-  education: ['образован', 'учеб', 'edu', 'высшее', 'специальность'],
-  branch: ['род войск', 'подраздел', 'military', 'рота', 'батальон', 'формирование'],
-  rank: ['звание', 'rank', 'лейтенант', 'сержант'],
-  position: ['должность', 'position', 'работа', 'текущая'],
-  motivation: ['мотив', 'цель', 'план', 'идея', 'развитие', 'причина', 'смысл'],
-  injury: ['травм', 'ранен', 'здоров', 'контуз', 'диагноз', 'увечье'],
-  telegram: ['телег', 'tg', 'telegram', 't.me', 'телеграм'],
-  email: ['email', 'почта', 'e-mail', 'электрон'],
-  experience: ['опыт', 'руководил', 'управленческий', 'менеджер'],
-  ideas: ['идеи', 'развитие региона', 'предложения', 'инициатива']
+// Сопоставление технических имён колонок с внутренними ключами
+const fieldMap = {
+  fio: ['SURNAME', 'FIRSTNAME', 'PATRONYMIC'],
+  lastName: ['SURNAME'],
+  firstName: ['FIRSTNAME'],
+  middleName: ['PATRONYMIC'],
+  birth: ['BIRTHDATE'],
+  city: ['PLACEOFREGISTRATIONVALUE'],
+  docs: ['PASSPORTSERIESNUMBER'],
+  education: ['EDUCATIONVALUE'],
+  branch: ['MILITARYBRANCH', 'SPECIFYTYPETROOPS'],
+  rank: ['MILITARYRANKNAME'],
+  sector: ['FIELDPROFESSIONALACTIVITYVALUE', 'FIELDPROFESSIONALACTIVITYVALUE1'],
+  position: ['CURRENTPOSITION'],
+  motivation: ['PARTICIPATEPROJECTVALUE'],
+  injury: ['INFORMATIONINJURIES'],
+  telegram: ['LINKTELEGRAM'],
+  email: ['ALTERNATIVECONTACTMY'],
+  experience: ['PERIODMANAGEMENTEXPERIENCEVALUE'],
+  ideas: ['WHATDEVELOPMENTUGRA'],
+  user_id: ['USER'],
+  status: ['PARTICIPATIONSTATUS'],
+  awards: ['STATEAWARDSVALUE', 'YOURAWARDSVALUE', 'YOURAWARDSUGRAVALUE'],
+  formation: ['MILITARYFORMATION'],
+  military_position: ['MILITARYPOSITION'],
+  contact: ['CONTACTINFO'],
+  work_before: ['WORKBEFORE'],
+  current_work: ['CURRENTPLACEOFWORK']
 };
 
 // Элементы DOM
@@ -38,13 +49,17 @@ fileInput.addEventListener('change', function () {
   }
 });
 
-dropZone.addEventListener('dragover', e => {
-  e.preventDefault();
-  dropZone.style.backgroundColor = '#cfe2ff';
+['dragover', 'dragenter'].forEach(evt => {
+  dropZone.addEventListener(evt, e => {
+    e.preventDefault();
+    dropZone.style.backgroundColor = '#cfe2ff';
+  }, false);
 });
 
-dropZone.addEventListener('dragleave', () => {
-  dropZone.style.backgroundColor = '#e9ecef';
+['dragleave', 'dragend'].forEach(evt => {
+  dropZone.addEventListener(evt, () => {
+    dropZone.style.backgroundColor = '#e9ecef';
+  }, false);
 });
 
 dropZone.addEventListener('drop', e => {
@@ -84,12 +99,12 @@ processBtn.addEventListener('click', () => {
     }
 
     // Заголовки (первая строка)
-    const headers = jsonData[0].map(h => String(h || '').toLowerCase().trim());
+    const headers = jsonData[0];
 
-    // Поиск индексов нужных колонок
+    // Поиск индексов по техническим именам
     const cols = {};
-    for (const [key, keywords] of Object.entries(defaultCols)) {
-      cols[key] = headers.findIndex(h => keywords.some(k => h.includes(k)));
+    for (const [key, possibleNames] of Object.entries(fieldMap)) {
+      cols[key] = headers.findIndex(h => possibleNames.includes(String(h).trim()));
     }
 
     // Парсинг строк
@@ -97,41 +112,41 @@ processBtn.addEventListener('click', () => {
       const item = {};
       Object.keys(cols).forEach(key => {
         const idx = cols[key];
-        item[key] = idx >= 0 && row[idx] ? String(row[idx]).trim() : '';
-      });
-
-      // Объединяем ФИО
-      item.fio = `${item.lastName || ''} ${item.firstName || ''}`.trim();
-
-      // Очистка от [1], [2], ссылок и мусора
-      Object.keys(item).forEach(k => {
-        if (typeof item[k] === 'string') {
-          item[k] = item[k]
-            .replace(/\[\d+\]/g, '') // Убираем [1], [2]
-            .replace(/https?:\/\/[^\s]+/g, '') // Убираем ссылки
-            .replace(/\|+/g, ' ') // Заменяем множественные | на пробел
-            .replace(/\s+/g, ' ') // Лишние пробелы
+        if (idx >= 0 && row[idx]) {
+          let val = String(row[idx]).trim();
+          // Очистка от [1], [2], ссылок и т.д.
+          val = val
+            .replace(/\[\d+\]/g, '')
+            .replace(/https?:\/\/[^\s]+/g, '')
+            .replace(/\|+/g, ' ')
+            .replace(/\s+/g, ' ')
             .trim();
+          item[key] = val;
+        } else {
+          item[key] = '';
         }
       });
 
+      // Объединение ФИО
+      item.fio = [item.lastName, item.firstName, item.middleName]
+        .filter(Boolean).join(' ').trim() || item.lastName || '—';
+
       // Извлечение города из "Место жительства"
       if (item.city) {
-        const cityMatch = item.city.match(/г\.\s*([^,]+)/i);
-        if (cityMatch) item.city = cityMatch[1].trim();
+        const match = item.city.match(/г\.\s*([^,\n]+)/i);
+        item.city = match ? match[1].trim() : item.city.split(',')[0].trim();
       }
 
-      // Извлечение возраста из даты рождения
+      // Вычисление возраста
       if (item.birth && item.birth.includes('.')) {
-        const parts = item.birth.split('.');
-        const year = parseInt(parts[2]);
+        const year = parseInt(item.birth.split('.')[2]);
         if (year > 1900) {
           item.age = new Date().getFullYear() - year;
         }
       }
 
       return item;
-    }).filter(p => p.fio); // Только с ФИО
+    }).filter(p => p.fio !== '—' && p.fio);
 
     allData = parsed;
     localStorage.setItem('heroData', JSON.stringify(allData));
@@ -168,7 +183,7 @@ function renderDashboard(data) {
   const total = data.length;
   document.getElementById('total').textContent = total;
 
-  const withDocs = data.filter(p => p.docs.toLowerCase().includes('да')).length;
+  const withDocs = data.filter(p => p.docs).length;
   document.getElementById('withDocs').textContent = withDocs;
 
   const avgAge = data.filter(p => p.age).length
@@ -182,7 +197,7 @@ function renderDashboard(data) {
   // Таблица
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '';
-  data.forEach((p, i) => {
+  data.forEach(p => {
     const tr = document.createElement('tr');
     tr.className = 'participant-row';
     tr.innerHTML = `
@@ -239,7 +254,7 @@ function updateChart(id, type, labels, data, colors) {
     type: type,
     data: {
       labels: labels,
-      datasets: [{ data, backgroundColor: colors }]
+      datasets: [{ data: data, backgroundColor: colors }]
     },
     options: { responsive: true }
   });
@@ -315,10 +330,12 @@ function showDetail(p) {
     <p><strong>Род войск:</strong> ${p.branch || '—'}</p>
     <p><strong>Звание:</strong> ${p.rank || '—'}</p>
     <p><strong>Должность:</strong> ${p.position || '—'}</p>
+    <p><strong>Сфера деятельности:</strong> ${p.sector || '—'}</p>
     <p><strong>Мотивация:</strong> ${p.motivation || '—'}</p>
     <p><strong>Травмы:</strong> ${p.injury || '—'}</p>
-    <p><strong>Email:</strong> ${p.email || '—'}</p>
     <p><strong>Telegram:</strong> ${p.telegram || '—'}</p>
+    <p><strong>Email:</strong> ${p.email || '—'}</p>
+    <p><strong>Статус:</strong> ${p.status || '—'}</p>
   `;
   modal.show();
 }
