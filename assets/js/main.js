@@ -1,7 +1,7 @@
 // Глобальные переменные
 let allData = [];
 
-// Сопоставление полей анкеты
+// Сопоставление технических полей анкеты
 const fieldMap = {
   user_id: ['USER'],
   lastName: ['SURNAME'],
@@ -9,9 +9,9 @@ const fieldMap = {
   middleName: ['PATRONYMIC'],
   birth: ['BIRTHDATE'],
   gender: ['GENDER'],
-  maritalStatus: ['MARITALSTATUS', 'MARITALSTATUSWOMEN'],
+  maritalStatus: ['MARITALSTATUS'],
   rank: ['MILITARYRANKNAME'],
-  branch: ['MILITARYBRANCH', 'SPECIFYTYPETROOPS'],
+  branch: ['MILITARYBRANCH'],
   heroicDeed: ['HEROICDEED'],
   participationPeriod: ['PARTICIPATIONPERIOD'],
   injury: ['INFORMATIONINJURIES'],
@@ -19,7 +19,7 @@ const fieldMap = {
   status: ['PARTICIPATIONSTATUS', 'SPECIFYYOURPARTICIPATIONSTATUS'],
   specialRank: ['SPECIALRANK'],
   education: ['EDUCATIONVALUE'],
-  fieldWork: ['FIELDOFWORKVALUE', 'FIELDPROFESSIONALACTIVITYVALUE', 'FIELDPROFESSIONALACTIVITYVALUE1'],
+  fieldWork: ['FIELDOFWORKVALUE', 'FIELDPROFESSIONALACTIVITYVALUE'],
   passportSeries: ['PASSPORTSERIESNUMBER'],
   passportIssued: ['PASSPORTISSUED'],
   passportIssueDate: ['PASSPORTDATEISSUE'],
@@ -300,7 +300,7 @@ function updateChart(id, type, labels, data, colors) {
 
   let config = {
     type: type,
-    data: {
+     {
       labels: labels,
       datasets: [{
         data: data,
