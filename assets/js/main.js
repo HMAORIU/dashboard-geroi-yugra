@@ -1,35 +1,71 @@
 // Глобальные переменные
 let allData = [];
 
-// Сопоставление технических полей из анкеты
+// Сопоставление полей анкеты
 const fieldMap = {
-  lastName: ['UF_SURNAME'],
-  firstName: ['UF_FIRSTNAME'],
-  middleName: ['UF_PATRONYMIC'],
-  birth: ['UF_BIRTHDATE'],
-  city: ['UF_PLACEOFREGISTRATIONVALUE'],
-  docs: ['UF_PASSPORTSERIESNUMBER'],
-  education: ['UF_EDUCATIONVALUE'],
-  branch: ['UF_MILITARYBRANCH'],
-  rank: ['UF_RANKNAME'],
-  sector: ['UF_FIELDOFWORKVALUE'],
-  position: ['UF_CURRENTPOSITION'],
-  motivation: ['UF_PARTICIPATEPROJECTVALUE'],
-  injury: ['UF_INFORMATIONINJURIES'],
-  telegram: ['UF_LINKTELEGRAM'],
-  email: ['UF_ALTERNATIVECONTACTMY'],
-  user_id: ['UF_USER'],
-  status: ['UF_PARTICIPATIONSTATUS'],
-  formation: ['UF_MILITARYFORMATION'],
-  military_position: ['UF_COMMANDMILITARYPOSITIONVALUE'],
-  contact: ['UF_CONTACTINFO'],
-  work_before: ['UF_WORKBEFORE'],
-  current_work: ['UF_CURRENTPLACEOFWORK'],
-  experience: ['UF_PERIODMANAGEMENTEXPERIENCEVALUE'],
-  ideas: ['UF_WHATDEVELOPMENTUGRA']
+  user_id: ['USER'],
+  lastName: ['SURNAME'],
+  firstName: ['FIRSTNAME'],
+  middleName: ['PATRONYMIC'],
+  birth: ['BIRTHDATE'],
+  gender: ['GENDER'],
+  maritalStatus: ['MARITALSTATUS', 'MARITALSTATUSWOMEN'],
+  rank: ['MILITARYRANKNAME'],
+  branch: ['MILITARYBRANCH', 'SPECIFYTYPETROOPS'],
+  heroicDeed: ['HEROICDEED'],
+  participationPeriod: ['PARTICIPATIONPERIOD'],
+  injury: ['INFORMATIONINJURIES'],
+  city: ['PLACEOFREGISTRATIONVALUE'],
+  status: ['PARTICIPATIONSTATUS', 'SPECIFYYOURPARTICIPATIONSTATUS'],
+  specialRank: ['SPECIALRANK'],
+  education: ['EDUCATIONVALUE'],
+  fieldWork: ['FIELDOFWORKVALUE', 'FIELDPROFESSIONALACTIVITYVALUE', 'FIELDPROFESSIONALACTIVITYVALUE1'],
+  passportSeries: ['PASSPORTSERIESNUMBER'],
+  passportIssued: ['PASSPORTISSUED'],
+  passportIssueDate: ['PASSPORTDATEISSUE'],
+  passportBirthPlace: ['PASSPORTPLACEBIRTH'],
+  passportRegAddress: ['PASSPORTREGISTRATIONADDRESS'],
+  passportActualAddress: ['PASSPORTACTUALRESIDENTIALADDRESS'],
+  experienceYears: ['PERIODMANAGEMENTEXPERIENCEVALUE'],
+  maxControlLevel: ['MAXIMUMCONTROLLEVEL'],
+  maxEmployees: ['MAXNUMBEREMPLOYEESSUPERVISION'],
+  workExperience: ['DESCRIPTIONOFLABORACTIVITYVALUE'],
+  motivation: ['PARTICIPATEPROJECTVALUE'],
+  strengths: ['HOWYOUSTRENGTHSFRIENDS'],
+  skillsToDevelop: ['WHATSKILLSPROJECT'],
+  ideas: ['WHATDEVELOPMENTUGRA'],
+  readyForJob: ['READYCONSIDERJOB'],
+  desiredPosition: ['WHATPOSITIONSEE'],
+  stateAwards: ['STATEAWARDSVALUE'],
+  departmentAwards: ['YOURAWARDSVALUE'],
+  ugraAwards: ['YOURAWARDSUGRAVALUE'],
+  disability: ['HAVELIMITEDHEALTHOPTIONS'],
+  militaryNumber: ['MILITARYNUMBER'],
+  militaryDistrict: ['MILITARYDISTRICT'],
+  currentZone: ['NOWZONESVO'],
+  contact: ['CONTACTINFO'],
+  interestedInEducation: ['INTERESTEDINGETTINGANEDUCATION'],
+  currentEducation: ['CURRENTEDUCATION'],
+  workBefore: ['WORKBEFORE'],
+  specialization: ['SPECIALIZATION'],
+  altContact: ['ALTERNATIVECONTACTMY'],
+  snils: ['SNILSVALUE'],
+  currentWork: ['CURRENTPLACEOFWORK'],
+  currentPosition: ['CURRENTPOSITION'],
+  telegram: ['LINKTELEGRAM'],
+  vk: ['LINKVKONTAKTE'],
+  ok: ['LINKODNOKLASSNIKI'],
+  infoParticipation: ['INFO_PARTICIPATION'],
+  isContractCompleted: ['ISCONTRACTCOMPLETED'],
+  militaryFormation: ['MILITARYFORMATION'],
+  militaryPosition: ['MILITARYPOSITION'],
+  categoryRank: ['CATEGORYMILITARYRANK'],
+  placeJobBefore: ['PLACEJOBBEFORECONTRACTHEAD'],
+  maxControlLevel: ['MAXIMUMCONTROLLEVEL'],
+  maxEmployees: ['MAXNUMBEREMPLOYEESSUPERVISION']
 };
 
-// Элементы DOM
+// DOM Elements
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
 const processBtn = document.getElementById('processBtn');
@@ -96,23 +132,18 @@ processBtn.addEventListener('click', () => {
       return;
     }
 
-    // Заголовки (первая строка)
     const headers = jsonData[0];
-
-    // Поиск индексов по техническим именам
     const cols = {};
     for (const [key, possibleNames] of Object.entries(fieldMap)) {
       cols[key] = headers.findIndex(h => possibleNames.includes(String(h).trim()));
     }
 
-    // Парсинг строк
     const parsed = jsonData.slice(1).map(row => {
       const item = {};
       Object.keys(cols).forEach(key => {
         const idx = cols[key];
         if (idx >= 0 && row[idx]) {
           let val = String(row[idx]).trim();
-          // Очистка от [1], [2], ссылок и т.д.
           val = val
             .replace(/\[\d+\]/g, '')
             .replace(/https?:\/\/[^\s]+/g, '')
@@ -125,17 +156,13 @@ processBtn.addEventListener('click', () => {
         }
       });
 
-      // Объединение ФИО
-      item.fio = [item.lastName, item.firstName, item.middleName]
-        .filter(Boolean).join(' ').trim() || item.lastName || '—';
+      item.fio = [item.lastName, item.firstName, item.middleName].filter(Boolean).join(' ').trim() || '—';
 
-      // Извлечение города из "г. Сургут"
       if (item.city) {
         const match = item.city.match(/г\.\s*([^,\n]+)/i);
         item.city = match ? match[1].trim() : item.city.split(',')[0].trim();
       }
 
-      // Вычисление возраста
       if (item.birth && item.birth.includes('.')) {
         const year = parseInt(item.birth.split('.')[2]);
         if (year > 1900) {
@@ -143,8 +170,12 @@ processBtn.addEventListener('click', () => {
         }
       }
 
+      item.hasHigherEdu = item.education.toLowerCase().includes('высшее');
+      item.isVeteran = item.status.toLowerCase().includes('ветеран');
+      item.hasStateAwards = item.stateAwards.toLowerCase().includes('да');
+
       return item;
-    }).filter(p => p.fio !== '—' && p.fio);
+    }).filter(p => p.fio !== '—');
 
     allData = parsed;
     localStorage.setItem('heroData', JSON.stringify(allData));
@@ -181,7 +212,7 @@ function renderDashboard(data) {
   const total = data.length;
   document.getElementById('total').textContent = total;
 
-  const withDocs = data.filter(p => p.docs).length;
+  const withDocs = data.filter(p => p.passportSeries).length;
   document.getElementById('withDocs').textContent = withDocs;
 
   const avgAge = data.filter(p => p.age).length
@@ -189,7 +220,7 @@ function renderDashboard(data) {
     : '—';
   document.getElementById('avgAge').textContent = avgAge + ' лет';
 
-  const highEdu = data.filter(p => p.education.toLowerCase().includes('высшее')).length;
+  const highEdu = data.filter(p => p.hasHigherEdu).length;
   document.getElementById('highEdu').textContent = highEdu;
 
   // Таблица
@@ -203,7 +234,7 @@ function renderDashboard(data) {
       <td>${p.city || '—'}</td>
       <td>${p.age || '—'}</td>
       <td>${p.branch || '—'}</td>
-      <td>${p.position || '—'}</td>
+      <td>${p.currentPosition || '—'}</td>
     `;
     tr.onclick = () => showDetail(p);
     tbody.appendChild(tr);
@@ -231,7 +262,7 @@ function renderDashboard(data) {
   }
 
   // Графики
-  updateChart('docsChart', 'pie', ['С документами', 'Без'], [withDocs, total - withDocs], ['#5CB85C', '#D9534F']);
+  updateChart('docsChart', 'pie', ['С паспортом', 'Без'], [withDocs, total - withDocs], ['#5CB85C', '#D9534F']);
   updateChart('eduChart', 'doughnut', ['Высшее', 'Другое'], [highEdu, total - highEdu], ['#337AB7', '#F0AD4E']);
 
   const cities = count(data, 'city');
@@ -239,6 +270,24 @@ function renderDashboard(data) {
 
   const branches = count(data, 'branch');
   updateChart('branchChart', 'pie', Object.keys(branches), Object.values(branches), ['#D32F2F', '#1976D2', '#0288D1', '#388E3C']);
+
+  const gender = count(data, 'gender');
+  updateChart('genderChart', 'bar', Object.keys(gender), Object.values(gender), ['#F44336', '#2196F3']);
+
+  const status = count(data, 'status');
+  updateChart('statusChart', 'pie', Object.keys(status), Object.values(status), ['#FF9800', '#4CAF50', '#9C27B0']);
+
+  const marital = count(data, 'maritalStatus');
+  updateChart('maritalChart', 'doughnut', Object.keys(marital), Object.values(marital), ['#FFC107', '#795548', '#607D8B']);
+
+  const awards = count(data, 'stateAwards');
+  updateChart('awardsChart', 'pie', ['Есть награды', 'Нет'], [data.filter(p => p.hasStateAwards).length, total - data.filter(p => p.hasStateAwards).length], ['#FFD700', '#9E9E9E']);
+
+  const experience = count(data, 'experienceYears');
+  updateChart('expChart', 'bar', Object.keys(experience), Object.values(experience), ['#8BC34A']);
+
+  const formations = count(data, 'militaryFormation');
+  updateChart('formationChart', 'horizontalBar', Object.keys(formations), Object.values(formations), ['#673AB7']);
 
   // AI-анализ
   analyzeMotivations(data);
@@ -248,14 +297,32 @@ function renderDashboard(data) {
 function updateChart(id, type, labels, data, colors) {
   const ctx = document.getElementById(id);
   if (ctx.chart) ctx.chart.destroy();
-  new Chart(ctx, {
+
+  let config = {
     type: type,
     data: {
       labels: labels,
-      datasets: [{ data: data, backgroundColor: colors }]
+      datasets: [{
+        data: data,
+        backgroundColor: colors,
+        borderWidth: 1
+      }]
     },
-    options: { responsive: true }
-  });
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: { enabled: true }
+      }
+    }
+  };
+
+  if (type === 'horizontalBar') {
+    config.type = 'bar';
+    config.options.indexAxis = 'y';
+  }
+
+  new Chart(ctx, config);
 }
 
 // Подсчёт значений
@@ -327,12 +394,14 @@ function showDetail(p) {
     <p><strong>Дата рождения:</strong> ${p.birth || '—'}</p>
     <p><strong>Род войск:</strong> ${p.branch || '—'}</p>
     <p><strong>Звание:</strong> ${p.rank || '—'}</p>
-    <p><strong>Должность:</strong> ${p.position || '—'}</p>
-    <p><strong>Сфера деятельности:</strong> ${p.sector || '—'}</p>
+    <p><strong>Должность:</strong> ${p.currentPosition || '—'}</p>
+    <p><strong>Сфера деятельности:</strong> ${p.fieldWork || '—'}</p>
     <p><strong>Мотивация:</strong> ${p.motivation || '—'}</p>
     <p><strong>Травмы:</strong> ${p.injury || '—'}</p>
     <p><strong>Telegram:</strong> ${p.telegram || '—'}</p>
-    <p><strong>Email:</strong> ${p.email || '—'}</p>
+    <p><strong>Статус:</strong> ${p.status || '—'}</p>
+    <p><strong>Управленческий опыт:</strong> ${p.experienceYears || '—'}</p>
+    <p><strong>Награды:</strong> ${p.stateAwards || '—'}</p>
   `;
   modal.show();
 }
@@ -344,7 +413,7 @@ document.getElementById('exportExcel').addEventListener('click', () => {
     Город: p.city,
     Возраст: p.age,
     "Род войск": p.branch,
-    Должность: p.position,
+    Должность: p.currentPosition,
     Мотивация: p.motivation
   })));
   const wb = XLSX.utils.book_new();
