@@ -9,9 +9,9 @@ const fieldMap = {
   middleName: ['PATRONYMIC'],
   birth: ['BIRTHDATE'],
   gender: ['GENDER'],
-  maritalStatus: ['MARITALSTATUS'],
+  maritalStatus: ['MARITALSTATUS', 'MARITALSTATUSWOMEN'],
   rank: ['MILITARYRANKNAME'],
-  branch: ['MILITARYBRANCH'],
+  branch: ['MILITARYBRANCH', 'SPECIFYTYPETROOPS'],
   heroicDeed: ['HEROICDEED'],
   participationPeriod: ['PARTICIPATIONPERIOD'],
   injury: ['INFORMATIONINJURIES'],
@@ -19,28 +19,17 @@ const fieldMap = {
   status: ['PARTICIPATIONSTATUS', 'SPECIFYYOURPARTICIPATIONSTATUS'],
   specialRank: ['SPECIALRANK'],
   education: ['EDUCATIONVALUE'],
-  fieldWork: ['FIELDOFWORKVALUE', 'FIELDPROFESSIONALACTIVITYVALUE'],
+  fieldWork: ['FIELDOFWORKVALUE', 'FIELDPROFESSIONALACTIVITYVALUE', 'FIELDPROFESSIONALACTIVITYVALUE1'],
   passportSeries: ['PASSPORTSERIESNUMBER'],
-  passportIssued: ['PASSPORTISSUED'],
-  passportIssueDate: ['PASSPORTDATEISSUE'],
-  passportBirthPlace: ['PASSPORTPLACEBIRTH'],
-  passportRegAddress: ['PASSPORTREGISTRATIONADDRESS'],
-  passportActualAddress: ['PASSPORTACTUALRESIDENTIALADDRESS'],
   experienceYears: ['PERIODMANAGEMENTEXPERIENCEVALUE'],
-  maxControlLevel: ['MAXIMUMCONTROLLEVEL'],
-  maxEmployees: ['MAXNUMBEREMPLOYEESSUPERVISION'],
   workExperience: ['DESCRIPTIONOFLABORACTIVITYVALUE'],
   motivation: ['PARTICIPATEPROJECTVALUE'],
-  strengths: ['HOWYOUSTRENGTHSFRIENDS'],
   skillsToDevelop: ['WHATSKILLSPROJECT'],
   ideas: ['WHATDEVELOPMENTUGRA'],
-  readyForJob: ['READYCONSIDERJOB'],
-  desiredPosition: ['WHATPOSITIONSEE'],
   stateAwards: ['STATEAWARDSVALUE'],
   departmentAwards: ['YOURAWARDSVALUE'],
   ugraAwards: ['YOURAWARDSUGRAVALUE'],
   disability: ['HAVELIMITEDHEALTHOPTIONS'],
-  militaryNumber: ['MILITARYNUMBER'],
   militaryDistrict: ['MILITARYDISTRICT'],
   currentZone: ['NOWZONESVO'],
   contact: ['CONTACTINFO'],
@@ -60,7 +49,6 @@ const fieldMap = {
   militaryFormation: ['MILITARYFORMATION'],
   militaryPosition: ['MILITARYPOSITION'],
   categoryRank: ['CATEGORYMILITARYRANK'],
-  placeJobBefore: ['PLACEJOBBEFORECONTRACTHEAD'],
   maxControlLevel: ['MAXIMUMCONTROLLEVEL'],
   maxEmployees: ['MAXNUMBEREMPLOYEESSUPERVISION']
 };
@@ -401,35 +389,4 @@ function showDetail(p) {
     <p><strong>Telegram:</strong> ${p.telegram || '—'}</p>
     <p><strong>Статус:</strong> ${p.status || '—'}</p>
     <p><strong>Управленческий опыт:</strong> ${p.experienceYears || '—'}</p>
-    <p><strong>Награды:</strong> ${p.stateAwards || '—'}</p>
-  `;
-  modal.show();
-}
-
-// Экспорт в Excel
-document.getElementById('exportExcel').addEventListener('click', () => {
-  const ws = XLSX.utils.json_to_sheet(allData.map(p => ({
-    ФИО: p.fio,
-    Город: p.city,
-    Возраст: p.age,
-    "Род войск": p.branch,
-    Должность: p.currentPosition,
-    Мотивация: p.motivation
-  })));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Участники");
-  XLSX.writeFile(wb, "Герои_Югры.xlsx");
-});
-
-// Экспорт в PDF
-document.getElementById('exportPdf').addEventListener('click', () => {
-  html2canvas(document.querySelector("#dashboard")).then(canvas => {
-    const imgData = canvas.toDataURL('image/png');
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const width = pdf.internal.pageSize.getWidth();
-    const height = (canvas.height * width) / canvas.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-    pdf.save('Герои_Югры.pdf');
-  });
-});
+   
