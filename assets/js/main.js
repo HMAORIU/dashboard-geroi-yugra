@@ -1,34 +1,32 @@
 // Глобальные переменные
 let allData = [];
 
-// Сопоставление технических имён колонок с внутренними ключами
+// Сопоставление технических полей из анкеты
 const fieldMap = {
-  fio: ['SURNAME', 'FIRSTNAME', 'PATRONYMIC'],
-  lastName: ['SURNAME'],
-  firstName: ['FIRSTNAME'],
-  middleName: ['PATRONYMIC'],
-  birth: ['BIRTHDATE'],
-  city: ['PLACEOFREGISTRATIONVALUE'],
-  docs: ['PASSPORTSERIESNUMBER'],
-  education: ['EDUCATIONVALUE'],
-  branch: ['MILITARYBRANCH', 'SPECIFYTYPETROOPS'],
-  rank: ['MILITARYRANKNAME'],
-  sector: ['FIELDPROFESSIONALACTIVITYVALUE', 'FIELDPROFESSIONALACTIVITYVALUE1'],
-  position: ['CURRENTPOSITION'],
-  motivation: ['PARTICIPATEPROJECTVALUE'],
-  injury: ['INFORMATIONINJURIES'],
-  telegram: ['LINKTELEGRAM'],
-  email: ['ALTERNATIVECONTACTMY'],
-  experience: ['PERIODMANAGEMENTEXPERIENCEVALUE'],
-  ideas: ['WHATDEVELOPMENTUGRA'],
-  user_id: ['USER'],
-  status: ['PARTICIPATIONSTATUS'],
-  awards: ['STATEAWARDSVALUE', 'YOURAWARDSVALUE', 'YOURAWARDSUGRAVALUE'],
-  formation: ['MILITARYFORMATION'],
-  military_position: ['MILITARYPOSITION'],
-  contact: ['CONTACTINFO'],
-  work_before: ['WORKBEFORE'],
-  current_work: ['CURRENTPLACEOFWORK']
+  lastName: ['UF_SURNAME'],
+  firstName: ['UF_FIRSTNAME'],
+  middleName: ['UF_PATRONYMIC'],
+  birth: ['UF_BIRTHDATE'],
+  city: ['UF_PLACEOFREGISTRATIONVALUE'],
+  docs: ['UF_PASSPORTSERIESNUMBER'],
+  education: ['UF_EDUCATIONVALUE'],
+  branch: ['UF_MILITARYBRANCH'],
+  rank: ['UF_RANKNAME'],
+  sector: ['UF_FIELDOFWORKVALUE'],
+  position: ['UF_CURRENTPOSITION'],
+  motivation: ['UF_PARTICIPATEPROJECTVALUE'],
+  injury: ['UF_INFORMATIONINJURIES'],
+  telegram: ['UF_LINKTELEGRAM'],
+  email: ['UF_ALTERNATIVECONTACTMY'],
+  user_id: ['UF_USER'],
+  status: ['UF_PARTICIPATIONSTATUS'],
+  formation: ['UF_MILITARYFORMATION'],
+  military_position: ['UF_COMMANDMILITARYPOSITIONVALUE'],
+  contact: ['UF_CONTACTINFO'],
+  work_before: ['UF_WORKBEFORE'],
+  current_work: ['UF_CURRENTPLACEOFWORK'],
+  experience: ['UF_PERIODMANAGEMENTEXPERIENCEVALUE'],
+  ideas: ['UF_WHATDEVELOPMENTUGRA']
 };
 
 // Элементы DOM
@@ -131,7 +129,7 @@ processBtn.addEventListener('click', () => {
       item.fio = [item.lastName, item.firstName, item.middleName]
         .filter(Boolean).join(' ').trim() || item.lastName || '—';
 
-      // Извлечение города из "Место жительства"
+      // Извлечение города из "г. Сургут"
       if (item.city) {
         const match = item.city.match(/г\.\s*([^,\n]+)/i);
         item.city = match ? match[1].trim() : item.city.split(',')[0].trim();
@@ -335,7 +333,6 @@ function showDetail(p) {
     <p><strong>Травмы:</strong> ${p.injury || '—'}</p>
     <p><strong>Telegram:</strong> ${p.telegram || '—'}</p>
     <p><strong>Email:</strong> ${p.email || '—'}</p>
-    <p><strong>Статус:</strong> ${p.status || '—'}</p>
   `;
   modal.show();
 }
